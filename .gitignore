@@ -3,8 +3,6 @@ lib/cylib.cc
 lib/cylib.html
 lib/cylib.so
 
-data/
-configs/
 experiments/
 weights/
 *.png
