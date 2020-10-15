@@ -1,6 +1,8 @@
 from torch.utils.data import Dataset
 from pathlib import Path
 
+import cv2
+
 from .labels import labels
 
 class_info = [label.name for label in labels if label.ignoreInEval is False]
@@ -20,6 +22,7 @@ for label in labels:
             j += 1
 
 id_to_map = {id: i for i, id in map_to_id.items()}
+print("ID TO MAP", id_to_map)
 inst_id_to_map = {id: i for i, id in inst_map_to_id.items()}
 
 
@@ -37,21 +40,26 @@ class Cityscapes(Dataset):
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
 
-    def __init__(self, root: Path, transforms: lambda x: x, subset='train', open_depth=False, labels_dir='labels', epoch=None):
+    def __init__(self, root: Path, transforms: lambda x: x, subset='train', open_depth=False, labels_dir='gtFine', epoch=None):
+
         self.root = root
-        self.images_dir = self.root / 'rgb' / subset
+        self.images_dir = self.root / 'leftImg8bit' / subset
         self.labels_dir = self.root / labels_dir / subset
         self.depth_dir = self.root / 'depth' / subset
+        print("Image dir", self.images_dir)
+        print("Labels dir", self.labels_dir)
         self.subset = subset
         self.has_labels = subset != 'test'
         self.open_depth = open_depth
-        self.images = list(sorted(self.images_dir.glob('*/*.ppm')))
+        self.images = list(sorted(self.images_dir.glob('*/*.png')))
         if self.has_labels:
-            self.labels = list(sorted(self.labels_dir.glob('*/*.png')))
+            self.labels = list(sorted(self.labels_dir.glob('*/*labelIds.png')))
         self.transforms = transforms
         self.epoch = epoch
 
-        print(f'Num images: {len(self)}')
+        print(f'Num images: {len(self.images)}')
+        if self.has_labels:
+            print(f'Num labels: {len(self.labels)}')
 
     def __len__(self):
         return len(self.images)
@@ -60,8 +68,10 @@ class Cityscapes(Dataset):
         ret_dict = {
             'image': self.images[item],
             'name': self.images[item].stem,
-            'subset': self.subset,
+            'subset': self.subset, # train/val/test
         }
+        
+        
         if self.has_labels:
             ret_dict['labels'] = self.labels[item]
         if self.epoch is not None:

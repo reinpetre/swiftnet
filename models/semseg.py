@@ -12,6 +12,7 @@ class SemsegModel(nn.Module):
                  loss_ret_additional=False, upsample_logits=True, logit_class=_BNReluConv,
                  multiscale_factors=(.5, .75, 1.5, 2.)):
         super(SemsegModel, self).__init__()
+        print("Num Classes: ", num_classes)
         self.backbone = backbone
         self.num_classes = num_classes
         self.logits = logit_class(self.backbone.num_features, self.num_classes, batch_norm=use_bn, k=k, bias=bias)
@@ -49,6 +50,7 @@ class SemsegModel(nn.Module):
             image_size = batch['target_size']
         warnings.warn(f'Image requires grad: {self.img_req_grad}', UserWarning)
         image = batch[img_key].detach().requires_grad_(self.img_req_grad).to(device)
+        
         return {
             'image': image,
             'image_size': image_size,

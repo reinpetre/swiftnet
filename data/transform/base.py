@@ -28,7 +28,11 @@ class Open:
             if 'depth' in example:
                 example['depth'] = pimg.open(example['depth'])
             if 'labels' in example:
-                ret_dict['labels'] = pimg.open(example['labels'])
+                mask = pimg.open(example['labels'])
+                mask = np.array(mask)
+                mask[mask == 255] = 1
+                ret_dict['labels'] = pimg.fromarray(mask)
+                
                 if self.palette is not None:
                     ret_dict['labels'].putpalette(self.palette)
                 if self.copy_labels:
